@@ -1,0 +1,43 @@
+version: '3.9'
+
+services:
+  cassandra:
+    image: cassandra:4.1
+    container_name: cassandra-container
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=MyCluster
+      - CASSANDRA_NUM_TOKENS=256
+      - CASSANDRA_SEEDS=cassandra
+      - CASSANDRA_START_RPC=true
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+
+  server:
+    build:
+      context: ./server
+      dockerfile: ../Dockerfile.server
+    container_name: server-container
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./server:/usr/src/app
+    depends_on:
+      - cassandra
+
+  client:
+    build:
+      context: ./client
+      dockerfile: ../Dockerfile.client
+    container_name: client-container
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./client:/usr/src/app
+    stdin_open: true
+    tty: true
+
+volumes:
+  cassandra_data:
+    driver: local
